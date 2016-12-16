@@ -27,7 +27,7 @@ def get_mask(mask_type, shape):
         return None;
     
     kernel_h, kernel_w, channel, output_channel = shape
-    assert kernel_h % 2 == 1 and kernel_w % 2 == 1, "kernel height and width should be odd number"
+    assert kernel_h % 2 == 1 and kernel_w % 2 == 1, 'kernel height and width should be odd number'
 
     center_h = kernel_h // 2
     center_w = kernel_w // 2
@@ -39,20 +39,20 @@ def get_mask(mask_type, shape):
     if mask_type == 'a':
         mask[center_h, center_w, : , : ] = 0.
 
-    return tf.constant(mask, dtype=tf.float32) 
+    return tf.constant(mask, dtype = tf.float32) 
 
 def conv2d(inputs,
            output_channel,
            mask_type,
            kernel_shape,
-           strides=[1,1],
-           padding='SAME',
-           activation_fn=None,
-           weights_initializer=WEIGHT_INITIALIZER,
-           weights_regularizer=None,
-           biases_initializer=tf.zeros_initializer,
-           biases_regularizer=None,
-           scope='maskconv2d'):
+           strides = [1, 1],
+           padding = 'SAME',
+           activation_fn = None,
+           weights_initializer = WEIGHT_INITIALIZER,
+           weights_regularizer = None,
+           biases_initializer = tf.zeros_initializer,
+           biases_regularizer = None,
+           scope = 'maskconv2d'):
     with tf.variable_scope(scope):
         batch_size, height, width, channel = inputs.get_shape().as_list()
 
@@ -75,8 +75,8 @@ def conv2d(inputs,
         outputs = tf.nn.conv2d(inputs,
                                W, 
                                [1, stride_h, stride_w, 1], 
-                               padding=padding, 
-                               name='conv2d_outputs')
+                               padding = padding, 
+                               name = 'conv2d_outputs')
         
         if biases_initializer is not None:
             biases = tf.get_variable('biases',
@@ -85,10 +85,10 @@ def conv2d(inputs,
                                      biases_initializer,
                                      biases_regularizer)
             
-            outputs = tf.nn.bias_add(outputs, biases, name='outputs_plus_b')
+            outputs = tf.nn.bias_add(outputs, biases, name = 'outputs_plus_b')
         
         
         if activation_fn is not None:
-            outputs = activation_fn(outputs, name='outputs_with_fn')
+            outputs = activation_fn(outputs, name = 'outputs_with_fn')
 
         return W, outputs
