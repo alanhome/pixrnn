@@ -36,7 +36,7 @@ def get_mask(mask_type, shape):
     mask[center_h, center_w+1 : , : , : ] = 0.
     mask[center_h+1 : , : , : , : ] = 0.
     
-    if mask_type.lower() == 'a':
+    if mask_type == 'a':
         mask[center_h, center_w, : , : ] = 0.
 
     return tf.constant(mask, dtype=tf.float32) 
