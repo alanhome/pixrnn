@@ -70,7 +70,7 @@ def conv2d(inputs,
         mask = get_mask(mask_type, W_shape)
         
         if mask is not None:
-            W = tf.multiply(W, mask, name = 'mask_weights')
+            W = tf.mul(W, mask, name = 'mask_weights')
         
         outputs = tf.nn.conv2d(inputs,
                                W, 
@@ -91,4 +91,46 @@ def conv2d(inputs,
         if activation_fn is not None:
             outputs = activation_fn(outputs, name = 'outputs_with_fn')
 
-        return W, outputs
+        return outputs
+
+def DiagnalLSTMCell(rnn_cell.RNNCell):
+    def init(self, hidden_dims, height):
+            self._height = height
+            self._hidden_dims = hidden_dims
+
+            self._col_dims = self._hidden_dims * self._height
+            self._state_size = 2 * self._col_dims
+            self._output_size = self._col_dims
+
+    def __call__(self, i2s, state, scope="DiagnalBiLSTMCell"):
+        _, i2s_dims = i2s.get_shape().as_list()
+        assert i2s_dims == 4 * self._col_dims, 'i2s dims is wrong'
+
+        c_pre, h_pre = tf.split(1, 2, state)
+        
+        with tf.variable_scope(scope):
+            h_pre_col = tf.reshape(h_pre, [-1, self.height, 1, self._hidden_dims])
+            conv_s2s = conv2d(h_pre_col, 4 * self._hidden_dims)
+            s2s = tf.reshape(conv_s2s, [-1, 4 * height * self._hidden_dims])
+            
+            i, f, ci, o = tf.split(1, 4, tf.sigmoid(tf.add(i2s, s2s)))
+            c = tf.add(tf.mul(ci, i), tf.mul(c_pre, f))
+            h = tf.mul(o, tf.tanh(c))
+            
+            new_state = tf.concat(1, [c, h])            
+            return h, new_state
+
+    @property
+    def output_size(self):
+        return self._output_size
+
+    @property
+    def state_size(self):
+        return self.state_size
+    
+    @property
+    def zero_state(self, batch_size, dtype):
+        return tf.zeros([batch_size, stat_size], dtype)
+
+
+        
