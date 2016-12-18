@@ -110,7 +110,7 @@ def DiagnalLSTMCell(rnn_cell.RNNCell):
         
         with tf.variable_scope(scope):
             h_pre_col = tf.reshape(h_pre, [-1, self.height, 1, self._hidden_dims])
-            conv_s2s = conv2d(h_pre_col, 4 * self._hidden_dims)
+            conv_s2s = conv2d(h_pre_col, 4 * self._hidden_dims, 'B', (3, 1), scope = 's2s')
             s2s = tf.reshape(conv_s2s, [-1, 4 * height * self._hidden_dims])
             
             i, f, ci, o = tf.split(1, 4, tf.sigmoid(tf.add(i2s, s2s)))
