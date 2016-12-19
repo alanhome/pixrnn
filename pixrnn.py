@@ -101,17 +101,19 @@ class DiagnalLSTMCell(rnn_cell.RNNCell):
             self._state_size = 2 * self._col_dims
             self._output_size = self._col_dims
 
-    def __call__(self, i2s, state, scope="DiagnalBiLSTMCell"):
+    def __call__(self, i2s, state, scope='DiagnalBiLSTMCell'):
         _, i2s_dims = i2s.get_shape().as_list()
         assert i2s_dims == 4 * self._col_dims, 'i2s dims is wrong'
-
+        
+        print scope
+        
         c_pre, h_pre = tf.split(1, 2, state)
         
         with tf.variable_scope(scope):
             h_pre_col = tf.reshape(h_pre, [-1, self._height, 1, self._hidden_dims])
-            conv_s2s = conv2d(h_pre_col, 4 * self._hidden_dims, 'b', (3, 1), scope = 's2s')
+            conv_s2s = conv2d(h_pre_col, 4 * self._hidden_dims, 'B', (3, 1), scope = 's2s')
             s2s = tf.reshape(conv_s2s, [-1, 4 * self._height * self._hidden_dims])
-            
+
             i, f, ci, o = tf.split(1, 4, tf.sigmoid(tf.add(i2s, s2s)))
             c = tf.add(tf.mul(ci, i), tf.mul(c_pre, f))
             h = tf.mul(o, tf.tanh(c))
@@ -131,5 +133,24 @@ class DiagnalLSTMCell(rnn_cell.RNNCell):
     def zero_state(self, batch_size, dtype):
         return tf.zeros([batch_size, stat_size], dtype)
 
-
+def diagnal_lstm(inputs, conf, scope = 'diagnal_lstm'):
+    with tf.variable_scope(scope):
+        skewed_inputs = skew(inputs, scope="skewed_input")
+        i2s = conv2d(skewed_inputs, 4 * conf.hidden_dims, [1, 1], "B", scope="i2s")
         
+        column_wise_inputs = tf.transpose(i2s, [0, 2, 1, 3])
+        batch, width, height, channel = get_shape(column_wise_inputs)
+        rnn_inputs = tf.reshape(column_wise_inputs, [batch, width, -1])
+        rnn_input_list = tf.unpack(rnn_inputs, axis=1)
+        cell = DiagonalLSTMCell(conf.hidden_dims, height, channel)
+
+        output_list, state_list = tf.nn.rnn(cell,
+                                            inputs=rnn_input_list, 
+                                            dtype=tf.float32)
+
+        packed_outputs = tf.pack(output_list, 1)
+        width_wise_outputs = tf.reshape(packed_outputs, [-1, width, height, conf.hidden_dims])
+        skewed_outputs = tf.transpose(width_wise_outputs, [0, 2, 1, 3])
+        outputs = unskew(skewed_outputs)
+
+        return outputs
