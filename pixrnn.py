@@ -39,7 +39,7 @@ def get_mask(mask_type, shape):
     if mask_type == 'a':
         mask[center_h, center_w, : , : ] = 0.
 
-    return tf.constant(mask, dtype = tf.float32) 
+    return tf.constant(mask, dtype=tf.float32)
 
 def conv2d(inputs,
            output_channel,
@@ -71,7 +71,11 @@ def conv2d(inputs,
         
         if mask is not None:
             W = tf.mul(W, mask, name = 'mask_weights')
-        
+            mask_value = tf.get_variable('mask_value', mask.get_shape())
+            W_value = tf.get_variable('W_value_mask', W.get_shape())
+            W_value = W
+            mask_value = mask
+
         outputs = tf.nn.conv2d(inputs,
                                W, 
                                [1, stride_h, stride_w, 1], 
@@ -93,8 +97,8 @@ def conv2d(inputs,
 
         return outputs
 
-def DiagnalLSTMCell(rnn_cell.RNNCell):
-    def init(self, hidden_dims, height):
+class DiagnalLSTMCell(rnn_cell.RNNCell):
+    def __init__(self, hidden_dims, height):
             self._height = height
             self._hidden_dims = hidden_dims
 
@@ -109,9 +113,9 @@ def DiagnalLSTMCell(rnn_cell.RNNCell):
         c_pre, h_pre = tf.split(1, 2, state)
         
         with tf.variable_scope(scope):
-            h_pre_col = tf.reshape(h_pre, [-1, self.height, 1, self._hidden_dims])
-            conv_s2s = conv2d(h_pre_col, 4 * self._hidden_dims, 'B', (3, 1), scope = 's2s')
-            s2s = tf.reshape(conv_s2s, [-1, 4 * height * self._hidden_dims])
+            h_pre_col = tf.reshape(h_pre, [-1, self._height, 1, self._hidden_dims])
+            conv_s2s = conv2d(h_pre_col, 4 * self._hidden_dims, 'b', (3, 1), scope = 's2s')
+            s2s = tf.reshape(conv_s2s, [-1, 4 * self._height * self._hidden_dims])
             
             i, f, ci, o = tf.split(1, 4, tf.sigmoid(tf.add(i2s, s2s)))
             c = tf.add(tf.mul(ci, i), tf.mul(c_pre, f))
