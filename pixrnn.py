@@ -135,8 +135,8 @@ class DiagnalLSTMCell(rnn_cell.RNNCell):
 
 def diagnal_lstm(inputs, conf, scope = 'diagnal_lstm'):
     with tf.variable_scope(scope):
-        skewed_inputs = skew(inputs, scope="skewed_input")
-        i2s = conv2d(skewed_inputs, 4 * conf.hidden_dims, [1, 1], "B", scope="i2s")
+        skewed_inputs = skew(inputs, scope = 'skew_input')
+        i2s = conv2d(skewed_inputs, 4 * conf.hidden_dims, [1, 1], 'B', scope = 'i2s')
         
         column_wise_inputs = tf.transpose(i2s, [0, 2, 1, 3])
         batch, width, height, channel = get_shape(column_wise_inputs)
@@ -151,6 +151,6 @@ def diagnal_lstm(inputs, conf, scope = 'diagnal_lstm'):
         packed_outputs = tf.pack(output_list, 1)
         width_wise_outputs = tf.reshape(packed_outputs, [-1, width, height, conf.hidden_dims])
         skewed_outputs = tf.transpose(width_wise_outputs, [0, 2, 1, 3])
-        outputs = unskew(skewed_outputs)
+        outputs = unskew(skewed_outputs, scope = 'unskew_output')
 
         return outputs
