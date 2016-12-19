@@ -145,8 +145,8 @@ def diagnal_lstm(inputs, conf, scope = 'diagnal_lstm'):
         cell = DiagonalLSTMCell(conf.hidden_dims, height, channel)
 
         output_list, state_list = tf.nn.rnn(cell,
-                                            inputs=rnn_input_list, 
-                                            dtype=tf.float32)
+                                            inputs = rnn_input_list, 
+                                            dtype = tf.float32)
 
         packed_outputs = tf.pack(output_list, 1)
         width_wise_outputs = tf.reshape(packed_outputs, [-1, width, height, conf.hidden_dims])
