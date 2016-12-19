@@ -39,7 +39,7 @@ def get_mask(mask_type, shape):
     if mask_type == 'a':
         mask[center_h, center_w, : , : ] = 0.
 
-    return tf.constant(mask, dtype=tf.float32)
+    return tf.constant(mask, dtype = tf.float32)
 
 def conv2d(inputs,
            output_channel,
@@ -71,10 +71,6 @@ def conv2d(inputs,
         
         if mask is not None:
             W = tf.mul(W, mask, name = 'mask_weights')
-            mask_value = tf.get_variable('mask_value', mask.get_shape())
-            W_value = tf.get_variable('W_value_mask', W.get_shape())
-            W_value = W
-            mask_value = mask
 
         outputs = tf.nn.conv2d(inputs,
                                W, 
@@ -90,7 +86,6 @@ def conv2d(inputs,
                                      biases_regularizer)
             
             outputs = tf.nn.bias_add(outputs, biases, name = 'outputs_plus_b')
-        
         
         if activation_fn is not None:
             outputs = activation_fn(outputs, name = 'outputs_with_fn')
