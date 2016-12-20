@@ -55,7 +55,6 @@ def conv2d(inputs,
            scope = 'maskconv2d'):
     with tf.variable_scope(scope):
         batch_size, height, width, channel = inputs.get_shape().as_list()
-
         kernel_h, kernel_w = kernel_shape
         stride_h, stride_w = strides
 
@@ -92,7 +91,7 @@ def conv2d(inputs,
 
         return outputs
 
-class DiagnalLSTMCell(rnn_cell.RNNCell):
+class DiagonalLSTMCell(rnn_cell.RNNCell):
     def __init__(self, hidden_dims, height):
             self._height = height
             self._hidden_dims = hidden_dims
@@ -100,11 +99,9 @@ class DiagnalLSTMCell(rnn_cell.RNNCell):
             self._state_size = 2 * self._col_dims
             self._output_size = self._col_dims
 
-    def __call__(self, i2s, state, scope='DiagnalBiLSTMCell'):
+    def __call__(self, i2s, state, scope='DiagonalBiLSTMCell'):
         _, i2s_dims = i2s.get_shape().as_list()
         assert i2s_dims == 4 * self._col_dims, 'i2s dims is wrong'
-        
-        print scope
         
         c_pre, h_pre = tf.split(1, 2, state)
         
@@ -126,22 +123,18 @@ class DiagnalLSTMCell(rnn_cell.RNNCell):
 
     @property
     def state_size(self):
-        return self.state_size
+        return self._state_size
     
-    @property
-    def zero_state(self, batch_size, dtype):
-        return tf.zeros([batch_size, stat_size], dtype)
-
-def diagnal_lstm(inputs, conf, scope = 'diagnal_lstm'):
+def diagonal_lstm(inputs, conf, scope = 'diagonal_lstm'):
     with tf.variable_scope(scope):
         skewed_inputs = skew(inputs, scope = 'skew_input')
-        i2s = conv2d(skewed_inputs, 4 * conf.hidden_dims, [1, 1], 'B', scope = 'i2s')
+        i2s = conv2d(skewed_inputs, 4 * conf.hidden_dims, 'B', [1, 1], scope = 'i2s')
         
         column_wise_inputs = tf.transpose(i2s, [0, 2, 1, 3])
-        batch, width, height, channel = get_shape(column_wise_inputs)
+        batch, width, height, channel = column_wise_inputs.get_shape().as_list()
         rnn_inputs = tf.reshape(column_wise_inputs, [batch, width, -1])
         rnn_input_list = tf.unpack(rnn_inputs, axis=1)
-        cell = DiagonalLSTMCell(conf.hidden_dims, height, channel)
+        cell = DiagonalLSTMCell(conf.hidden_dims, height)
 
         output_list, state_list = tf.nn.rnn(cell,
                                             inputs = rnn_input_list, 
@@ -154,7 +147,7 @@ def diagnal_lstm(inputs, conf, scope = 'diagnal_lstm'):
 
         return outputs
 
-def diagonal_bilstm(inputs, conf, scope = 'diagnal_bilstm'):
+def bidiagonal_lstm(inputs, conf, scope = 'bidiagonal_lstm'):
     with tf.variable_scope(scope):
         def reverse(inputs):
             return tf.reverse(inputs, [False, False, True, False])
@@ -162,9 +155,8 @@ def diagonal_bilstm(inputs, conf, scope = 'diagnal_bilstm'):
         outputs_fw = diagonal_lstm(inputs, conf, scope = 'outputs_fw')
 
         outputs_bw = reverse(diagonal_lstm(reverse(inputs), conf, scope = 'outputs_bw'))
-        output_bw = tf.pad(tf.slice(output_bw, [0, 1, 0, 0], [-1, -1, -1, -1]), [[0, 0], [1, 0], [0, 0], [0, 0]])
+        outputs_bw = tf.pad(tf.slice(outputs_bw, [0, 1, 0, 0], [-1, -1, -1, -1]), [[0, 0], [1, 0], [0, 0], [0, 0]])
         
         return outputs_fw + outputs_bw
-
 
 
