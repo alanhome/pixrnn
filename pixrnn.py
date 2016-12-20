@@ -96,7 +96,6 @@ class DiagnalLSTMCell(rnn_cell.RNNCell):
     def __init__(self, hidden_dims, height):
             self._height = height
             self._hidden_dims = hidden_dims
-
             self._col_dims = self._hidden_dims * self._height
             self._state_size = 2 * self._col_dims
             self._output_size = self._col_dims
@@ -154,3 +153,18 @@ def diagnal_lstm(inputs, conf, scope = 'diagnal_lstm'):
         outputs = unskew(skewed_outputs, scope = 'unskew_output')
 
         return outputs
+
+def diagonal_bilstm(inputs, conf, scope = 'diagnal_bilstm'):
+    with tf.variable_scope(scope):
+        def reverse(inputs):
+            return tf.reverse(inputs, [False, False, True, False])
+        
+        outputs_fw = diagonal_lstm(inputs, conf, scope='outputs_fw')
+
+        outputs_bw = reverse(diagonal_lstm(reverse(inputs), conf, scope='outputs_bw'))
+        output_bw = tf.pad(tf.slice(output_bw, [0, 1, 0, 0], [-1, -1, -1, -1]), [[0, 0], [1, 0], [0, 0], [0, 0]])
+        
+        return outputs_fw + outputs_bw
+
+
+
