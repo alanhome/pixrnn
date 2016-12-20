@@ -159,9 +159,9 @@ def diagonal_bilstm(inputs, conf, scope = 'diagnal_bilstm'):
         def reverse(inputs):
             return tf.reverse(inputs, [False, False, True, False])
         
-        outputs_fw = diagonal_lstm(inputs, conf, scope='outputs_fw')
+        outputs_fw = diagonal_lstm(inputs, conf, scope = 'outputs_fw')
 
-        outputs_bw = reverse(diagonal_lstm(reverse(inputs), conf, scope='outputs_bw'))
+        outputs_bw = reverse(diagonal_lstm(reverse(inputs), conf, scope = 'outputs_bw'))
         output_bw = tf.pad(tf.slice(output_bw, [0, 1, 0, 0], [-1, -1, -1, -1]), [[0, 0], [1, 0], [0, 0], [0, 0]])
         
         return outputs_fw + outputs_bw
