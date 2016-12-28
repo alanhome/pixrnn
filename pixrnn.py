@@ -132,7 +132,7 @@ def diagonal_lstm(inputs, conf, scope = 'diagonal_lstm'):
         
         column_wise_inputs = tf.transpose(i2s, [0, 2, 1, 3])
         batch, width, height, channel = column_wise_inputs.get_shape().as_list()
-        rnn_inputs = tf.reshape(column_wise_inputs, [batch, width, -1])
+        rnn_inputs = tf.reshape(column_wise_inputs, [-1, width, height * channel])
         rnn_input_list = tf.unpack(rnn_inputs, axis=1)
         cell = DiagonalLSTMCell(conf.hidden_dims, height)
 
