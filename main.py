@@ -64,18 +64,25 @@ def main(_):
   check_and_create_dir(SAMPLE_DIR)
 
   # 0. prepare datasets
+  if conf.data == "mnist":
+    from tensorflow.examples.tutorials.mnist import input_data
+    mnist = input_data.read_data_sets(DATA_DIR, one_hot=True)
 
-  from tensorflow.examples.tutorials.mnist import input_data
-  mnist = input_data.read_data_sets(DATA_DIR, one_hot=True)
+    next_train_batch = lambda x: mnist.train.next_batch(x)[0]
+    next_test_batch = lambda x: mnist.test.next_batch(x)[0]
 
-  next_train_batch = lambda x: mnist.train.next_batch(x)[0]
-  next_test_batch = lambda x: mnist.test.next_batch(x)[0]
+    height, width, channel = 28, 28, 1
 
-  height, width, channel = 28, 28, 1
+    train_step_per_epoch = mnist.train.num_examples / conf.batch_size
+    test_step_per_epoch = mnist.test.num_examples / conf.batch_size
+  elif conf.data == "cifar":
+    from cifar10 import IMAGE_SIZE, inputs
 
-  train_step_per_epoch = mnist.train.num_examples / conf.batch_size
-  test_step_per_epoch = mnist.test.num_examples / conf.batch_size
+    maybe_download_and_extract(DATA_DIR)
+    images, labels = inputs(eval_data=False, 
+        data_dir=os.path.join(DATA_DIR, 'cifar-10-batches-bin'), batch_size=conf.batch_size)
 
+    height, width, channel = IMAGE_SIZE, IMAGE_SIZE, 3
 
   with tf.Session() as sess:
     network = Network(sess, conf, height, width, channel)

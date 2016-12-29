@@ -4,12 +4,12 @@ import tensorflow as tf
 
 # [batch, height, width, depth]
 x_image = tf.placeholder(tf.float32,shape=[3,2])
-x = tf.reshape(x_image,[1,3,2,1])
+x = tf.reshape(x_image,[1, 3, 2,1])
 
 #Filter: W  [kernel_height, kernel_width, output_depth, input_depth]
 W_cpu = np.array([[1],[-1], [0]],dtype=np.float32)
 W = tf.Variable(W_cpu)
-W = tf.reshape(W, [3,1,1,1])
+W = tf.reshape(W, [3, 1 ,1,1])
 
 strides=[1, 1, 1, 1]
 padding='SAME'
@@ -29,7 +29,7 @@ with tf.Session() as sess:
     print x.reshape(3,2)
     print ""
 
-    print "The shape of x:\t", W.shape, ",\t and the W.reshape(3,1) is :"
+    print "The shape of W:\t", W.shape, ",\t and the W.reshape(3,1) is :"
     print W.reshape(3,1)
     print ""
 
