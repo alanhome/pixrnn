@@ -105,8 +105,8 @@ class Network:
           next_sample = binarize(self.predict(samples))
           samples[:, i, j, k] = next_sample[:, i, j, k]
 
-          if self.data == 'mnist':
-            print "=" * (self.width/2), "(%2d, %2d)" % (i, j), "=" * (self.width/2)
-            mprint(next_sample[0,:,:,:])
+          #if self.data == 'mnist':
+            #print "=" * (self.width/2), "(%2d, %2d)" % (i, j), "=" * (self.width/2)
+            #mprint(next_sample[0,:,:,:])
 
     return samples
